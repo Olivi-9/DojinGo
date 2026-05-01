@@ -1,0 +1,41 @@
+bot:
+  token: "123456789:replace-me"
+  admins:
+    - 123456789
+
+telegraph:
+  tokens:
+    - "replace-with-telegraph-token"
+  author_name: "Olivi"
+  author_url: "https://github.com/Olivi-9/DojinGo"
+
+ipv6:
+  prefix: ""
+
+storage:
+  type: "memory" # "memory" or "file"
+  path: "./cache"
+  ttl: 3888000
+  max_entries: 1024
+
+proxy:
+  listen:
+    http: ""
+    socks5: ""
+  auth:
+    enabled: false
+    username: ""
+    password: ""
+  rate_limit_per_minute: 120
+
+collectors:
+  exhentai:
+    ipb_pass_hash: ""
+    ipb_member_id: ""
+    igneous: ""
+  pixiv:
+    session: ""
+
+whitelist:
+  enabled: false
+  ids: [123456789]

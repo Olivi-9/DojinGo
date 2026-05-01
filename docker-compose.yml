@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  ehbot:
+    build: .
+    container_name: ehbot
+    restart: always
+    network_mode: "host"
+    environment:
+      CONFIG_FILE: "/app/config.yaml"
+      TZ: Asia/Singapore
+    volumes:
+      - "./config.yaml:/app/config.yaml:ro"
+      - "./cache:/app/cache"
