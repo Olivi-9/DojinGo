@@ -8,6 +8,7 @@ telegraph:
     - "replace-with-telegraph-token"
   author_name: "Olivi"
   author_url: "https://github.com/Olivi-9/DojinGo"
+  catbox_user_hash: ""
 
 ipv6:
   prefix: ""

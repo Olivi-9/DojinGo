@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -17,14 +18,16 @@ import (
 const MaxSingleFileSize = 5 * 1024 * 1024
 
 type Client struct {
-	httpClient *httpclient.Client
-	tokens     []string
+	httpClient     *httpclient.Client
+	tokens         []string
+	catboxUserHash string
 }
 
-func New(client *httpclient.Client, tokens []string) *Client {
+func New(client *httpclient.Client, tokens []string, catboxUserHash string) *Client {
 	return &Client{
-		httpClient: client,
-		tokens:     append([]string(nil), tokens...),
+		httpClient:     client,
+		tokens:         append([]string(nil), tokens...),
+		catboxUserHash: strings.TrimSpace(catboxUserHash),
 	}
 }
 
@@ -77,6 +80,9 @@ func (c *Client) Upload(ctx context.Context, files [][]byte) ([]MediaInfo, error
 		var body bytes.Buffer
 		writer := multipart.NewWriter(&body)
 		_ = writer.WriteField("reqtype", "fileupload")
+		if c.catboxUserHash != "" {
+			_ = writer.WriteField("userhash", c.catboxUserHash)
+		}
 		part, err := writer.CreateFormFile("fileToUpload", "image.jpg")
 		if err != nil {
 			return nil, err
@@ -105,10 +111,15 @@ func (c *Client) Upload(ctx context.Context, files [][]byte) ([]MediaInfo, error
 		}
 		rawURL := strings.TrimSpace(string(payload))
 		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			logCatboxFailure(resp, payload, 2048)
 			if rawURL == "" {
-				return nil, fmt.Errorf("catbox upload returned %s", resp.Status)
+				return nil, fmt.Errorf("catbox upload returned %s (%s)", resp.Status, catboxResponseInfo(resp))
 			}
 			return nil, fmt.Errorf("catbox upload returned %s: %s", resp.Status, summarizePayload(rawURL, 512))
+		}
+		if rawURL == "" {
+			logCatboxFailure(resp, payload, 2048)
+			return nil, fmt.Errorf("catbox returned empty payload (%s)", catboxResponseInfo(resp))
 		}
 		if !strings.HasPrefix(rawURL, "https://files.catbox.moe/") {
 			return nil, fmt.Errorf("catbox returned unexpected payload %q", summarizePayload(rawURL, 512))
@@ -123,6 +134,24 @@ func summarizePayload(payload string, limit int) string {
 		return payload
 	}
 	return payload[:limit] + "..."
+}
+
+func catboxResponseInfo(resp *http.Response) string {
+	return fmt.Sprintf(
+		"content-type=%q content-length=%q server=%q",
+		resp.Header.Get("Content-Type"),
+		resp.Header.Get("Content-Length"),
+		resp.Header.Get("Server"),
+	)
+}
+
+func logCatboxFailure(resp *http.Response, payload []byte, limit int) {
+	if resp == nil {
+		return
+	}
+	headers := resp.Header.Clone()
+	snippet := summarizePayload(string(payload), limit)
+	log.Printf("catbox failure status=%s headers=%v body=%q", resp.Status, headers, snippet)
 }
 
 func (c *Client) randomToken() string {

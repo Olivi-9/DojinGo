@@ -32,9 +32,10 @@ type BotConfig struct {
 }
 
 type TelegraphConfig struct {
-	Tokens     []string `yaml:"tokens"`
-	AuthorName string   `yaml:"author_name"`
-	AuthorURL  string   `yaml:"author_url"`
+	Tokens         []string `yaml:"tokens"`
+	AuthorName     string   `yaml:"author_name"`
+	AuthorURL      string   `yaml:"author_url"`
+	CatboxUserHash string   `yaml:"catbox_user_hash"`
 }
 
 type IPv6Config struct {
