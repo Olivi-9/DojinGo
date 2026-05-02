@@ -3,7 +3,6 @@ package collector
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -34,7 +33,6 @@ func (c *EXCollector) Match(rawURL string) bool {
 }
 
 func (c *EXCollector) Fetch(ctx context.Context, rawURL string) (*Result, error) {
-	log.Printf("collector exhentai fetch start url=%s", rawURL)
 	albumURL, albumID, err := normalizeEHGalleryURL(rawURL, "exhentai.org")
 	if err != nil {
 		return nil, err
@@ -43,7 +41,6 @@ func (c *EXCollector) Fetch(ctx context.Context, rawURL string) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("collector exhentai pages fetched count=%d", len(pages))
 
 	title := firstSubmatch(exTitleRE, pages[0])
 	if title == "" {
@@ -53,7 +50,6 @@ func (c *EXCollector) Fetch(ctx context.Context, rawURL string) (*Result, error)
 	if len(imagePages) == 0 {
 		return nil, fmt.Errorf("invalid url, maybe resource has been deleted, or our ip is blocked")
 	}
-	log.Printf("collector exhentai image pages count=%d", len(imagePages))
 
 	return &Result{
 		Meta: AlbumMeta{

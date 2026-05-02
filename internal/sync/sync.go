@@ -52,31 +52,27 @@ func (s *Synchronizer) DeleteCache(ctx context.Context, key string) error {
 	return s.store.Delete(ctx, key)
 }
 
+// TODO: images stored on disk, not in memory.
 func (s *Synchronizer) Sync(ctx context.Context, rawURL string, progress ProgressFunc) (string, error) {
 	rawURL = strings.TrimRight(strings.TrimSpace(rawURL), "/")
-	log.Printf("sync start url=%s", rawURL)
 
 	coll, err := s.registry.Resolve(rawURL)
 	if err != nil {
 		return "", err
 	}
-	log.Printf("sync collector=%s", coll.Name())
 
 	cacheKey := strings.ReplaceAll(coll.Name()+"|"+rawURL, "exhentai", "e-hentai")
 	if cached, ok, err := s.store.Get(ctx, cacheKey); err == nil && ok {
 		if progress != nil {
 			progress("cache", 1, 1)
 		}
-		log.Printf("sync cache hit key=%s", cacheKey)
 		return cached, nil
 	}
-	log.Printf("sync cache miss key=%s", cacheKey)
 
 	result, err := coll.Fetch(ctx, rawURL)
 	if err != nil {
 		return "", err
 	}
-	log.Printf("sync collect complete title=%s", result.Meta.Name)
 
 	if progress != nil {
 		progress("collect", 0, 1)
@@ -89,7 +85,6 @@ func (s *Synchronizer) Sync(ctx context.Context, rawURL string, progress Progres
 	if err != nil {
 		return "", err
 	}
-	log.Printf("sync download complete count=%d", len(images))
 
 	if progress != nil {
 		progress("upload", 0, len(images))
@@ -99,7 +94,6 @@ func (s *Synchronizer) Sync(ctx context.Context, rawURL string, progress Progres
 	doneUploads := 0
 	for start := 0; start < len(images); {
 		chunk, size, next := nextUploadChunk(images, start)
-		log.Printf("sync upload chunk start=%d count=%d size=%d", start, len(chunk), size)
 		payload := make([][]byte, 0, len(chunk))
 		for _, image := range chunk {
 			payload = append(payload, image.Data)
@@ -119,8 +113,6 @@ func (s *Synchronizer) Sync(ctx context.Context, rawURL string, progress Progres
 		}
 		start = next
 	}
-
-	log.Printf("sync upload complete count=%d", doneUploads)
 
 	page, err := s.createPages(ctx, result.Meta, nodes)
 	if err != nil {

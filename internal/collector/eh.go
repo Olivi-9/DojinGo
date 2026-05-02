@@ -3,7 +3,6 @@ package collector
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -34,7 +33,6 @@ func (c *EHCollector) Match(rawURL string) bool {
 }
 
 func (c *EHCollector) Fetch(ctx context.Context, rawURL string) (*Result, error) {
-	log.Printf("collector e-hentai fetch start url=%s", rawURL)
 	albumURL, albumID, err := normalizeEHGalleryURL(rawURL, "e-hentai.org")
 	if err != nil {
 		return nil, err
@@ -44,7 +42,6 @@ func (c *EHCollector) Fetch(ctx context.Context, rawURL string) (*Result, error)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("collector e-hentai pages fetched count=%d", len(pages))
 
 	title := firstSubmatch(ehTitleRE, pages[0])
 	if title == "" {
@@ -55,7 +52,6 @@ func (c *EHCollector) Fetch(ctx context.Context, rawURL string) (*Result, error)
 	if len(imagePages) == 0 {
 		return nil, fmt.Errorf("invalid url, maybe resource has been deleted")
 	}
-	log.Printf("collector e-hentai image pages count=%d", len(imagePages))
 
 	return &Result{
 		Meta: AlbumMeta{
@@ -116,7 +112,6 @@ func collectMatches(re *regexp.Regexp, pages []string) []string {
 
 func pagedFetch(ctx context.Context, client *httpclient.Client, baseURL string) ([]string, error) {
 	var pages []string
-	log.Printf("collector paged fetch start base=%s", baseURL)
 	for page := 0; ; page++ {
 		url := fmt.Sprintf("%s/?p=%d", baseURL, page)
 		content, err := client.GetString(ctx, url)
@@ -126,7 +121,6 @@ func pagedFetch(ctx context.Context, client *httpclient.Client, baseURL string) 
 		pages = append(pages, content)
 		nextHTML := fmt.Sprintf("<a href=\"%s/?p=%d\" onclick=\"return false\">", baseURL, page+1)
 		if !strings.Contains(content, nextHTML) {
-			log.Printf("collector paged fetch done base=%s pages=%d", baseURL, len(pages))
 			return pages, nil
 		}
 	}

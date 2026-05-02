@@ -55,6 +55,7 @@ func New(cfg *config.Config, syncer *syncsvc.Synchronizer, logger *log.Logger) (
 }
 
 func (s *Service) Start(ctx context.Context) error {
+	s.logger.Print("bot start")
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 

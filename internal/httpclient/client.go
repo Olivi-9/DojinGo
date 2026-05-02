@@ -99,13 +99,11 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	if req.Header.Get("User-Agent") == "" {
 		req.Header.Set("User-Agent", randomUserAgent())
 	}
-	start := time.Now()
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		log.Printf("http %s %s error=%v", req.Method, req.URL.Redacted(), err)
 		return nil, err
 	}
-	log.Printf("http %s %s -> %s (%s)", req.Method, req.URL.Redacted(), resp.Status, time.Since(start))
 	return resp, nil
 }
 
