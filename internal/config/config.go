@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -50,20 +51,12 @@ type StorageConfig struct {
 }
 
 type ProxyConfig struct {
-	Listen             ProxyListenConfig `yaml:"listen"`
-	Auth               ProxyAuthConfig   `yaml:"auth"`
-	RateLimitPerMinute int               `yaml:"rate_limit_per_minute"`
+	Upstream ProxyUpstreamConfig `yaml:"upstream"`
 }
 
-type ProxyListenConfig struct {
+type ProxyUpstreamConfig struct {
 	HTTP   string `yaml:"http"`
 	SOCKS5 string `yaml:"socks5"`
-}
-
-type ProxyAuthConfig struct {
-	Enabled  bool   `yaml:"enabled"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
 }
 
 type CollectorsConfig struct {
@@ -182,9 +175,6 @@ func (c *Config) Normalize(configDir string, legacy LegacyConfig) {
 	if c.Storage.MaxEntries <= 0 {
 		c.Storage.MaxEntries = 1024
 	}
-	if c.Proxy.RateLimitPerMinute <= 0 {
-		c.Proxy.RateLimitPerMinute = 120
-	}
 }
 
 func (c *Config) Validate(legacy LegacyConfig) error {
@@ -203,10 +193,21 @@ func (c *Config) Validate(legacy LegacyConfig) error {
 		errs = append(errs, fmt.Errorf("storage.type must be \"memory\" or \"file\", got %q", c.Storage.Type))
 	}
 
-	if c.Proxy.Auth.Enabled {
-		if c.Proxy.Auth.Username == "" || c.Proxy.Auth.Password == "" {
-			errs = append(errs, errors.New("proxy.auth username and password are required when auth is enabled"))
-		}
+	upstreamHTTP, err := NormalizeProxyEndpoint(c.Proxy.Upstream.HTTP, "http")
+	if err != nil {
+		errs = append(errs, fmt.Errorf("proxy.upstream.http %w", err))
+	} else if upstreamHTTP != nil && upstreamHTTP.Scheme != "http" && upstreamHTTP.Scheme != "https" {
+		errs = append(errs, fmt.Errorf("proxy.upstream.http must use http or https scheme"))
+	}
+
+	upstreamSOCKS5, err := NormalizeProxyEndpoint(c.Proxy.Upstream.SOCKS5, "socks5")
+	if err != nil {
+		errs = append(errs, fmt.Errorf("proxy.upstream.socks5 %w", err))
+	} else if upstreamSOCKS5 != nil && upstreamSOCKS5.Scheme != "socks5" && upstreamSOCKS5.Scheme != "socks5h" {
+		errs = append(errs, fmt.Errorf("proxy.upstream.socks5 must use socks5 scheme"))
+	}
+	if upstreamHTTP != nil && upstreamSOCKS5 != nil {
+		errs = append(errs, errors.New("proxy.upstream can only set one of http or socks5"))
 	}
 
 	if legacy.Proxy.Endpoint != "" || legacy.Proxy.Authorization != "" {
@@ -217,6 +218,24 @@ func (c *Config) Validate(legacy LegacyConfig) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func NormalizeProxyEndpoint(raw, defaultScheme string) (*url.URL, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return nil, nil
+	}
+	if !strings.Contains(trimmed, "://") {
+		trimmed = defaultScheme + "://" + trimmed
+	}
+	parsed, err := url.Parse(trimmed)
+	if err != nil {
+		return nil, fmt.Errorf("invalid proxy endpoint %q: %w", raw, err)
+	}
+	if parsed.Host == "" {
+		return nil, fmt.Errorf("proxy endpoint %q is missing host", raw)
+	}
+	return parsed, nil
 }
 
 func (c *Config) StorageTTL() time.Duration {

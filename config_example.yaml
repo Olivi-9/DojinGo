@@ -20,14 +20,9 @@ storage:
   max_entries: 1024
 
 proxy:
-  listen:
+  upstream:
     http: ""
     socks5: ""
-  auth:
-    enabled: false
-    username: ""
-    password: ""
-  rate_limit_per_minute: 120
 
 collectors:
   exhentai:

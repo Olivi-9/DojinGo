@@ -12,7 +12,6 @@ import (
 	"DojinGo/internal/collector"
 	"DojinGo/internal/config"
 	"DojinGo/internal/httpclient"
-	"DojinGo/internal/proxy"
 	"DojinGo/internal/storage"
 	syncsvc "DojinGo/internal/sync"
 	"DojinGo/internal/telegraph"
@@ -56,11 +55,6 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
-
-	proxyServer := proxy.New(cfg.Proxy, logger)
-	if err := proxyServer.Start(ctx); err != nil {
-		logger.Fatalf("start proxy server: %v", err)
-	}
 
 	botService, err := bot.New(cfg, syncer, logger)
 	if err != nil {

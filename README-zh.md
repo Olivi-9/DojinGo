@@ -4,11 +4,10 @@
 
 自动从 EH/EX/NH 下载图片集并上传到 Telegraph 的 Bot。
 
-## 更新内容
+## 功能特性
 
-- Bot 现在直接通过 Go 的 `net/http` 与支持的网站通信。
+- 可以直接连接也可以使用出站代理（所有流量）
 - 缓存仅限本地：内存或文件系统支持。
-- 可选的入站代理服务内置在 Bot 进程中。
 
 ## 支持源
 
@@ -41,10 +40,16 @@
 docker compose up -d --build
 ```
 
-或本地运行：
+或本地构建：
 
 ```bash
-go run ./cmd/ehbot -config ./config.yaml
+go build -o build/ehbot ./cmd/ehbot
+```
+
+运行：
+
+```bash
+./build/ehbot -c config.yaml
 ```
 
 ## 配置
@@ -71,14 +76,9 @@ storage:
   max_entries: 1024
 
 proxy:
-  listen:
-    http: "127.0.0.1:8080"
-    socks5: "127.0.0.1:1080"
-  auth:
-    enabled: false
-    username: ""
-    password: ""
-  rate_limit_per_minute: 120
+  upstream:
+    http: ""
+    socks5: ""
 
 collectors:
   exhentai:
@@ -98,7 +98,8 @@ whitelist:
 - `storage.type` 支持 `memory` 和 `file`。
 - `storage.path` 仅由文件存储使用。
 - `ipv6.prefix` 可以是较大的 IPv6 CIDR，例如 `2001:db8::/64`，用于轮换本地源地址。
-- 如果 `proxy.listen.http` 和 `proxy.listen.socks5` 为空，则内置代理服务器保持禁用状态。
+- `proxy.upstream` 用于出站请求，可配置 `http(s)://` 或 `socks5://`（`host:port` 可省略协议）。
+- 当配置了 `proxy.upstream` 时，所有出站流量（Telegram API、采集器、上传）都会走代理。
 
 
 ## IPv6 轮换
@@ -121,14 +122,13 @@ whitelist:
 
 ```bash
 go test ./...
-go build ./cmd/ehbot
+go build -o build/ehbot ./cmd/ehbot
 ```
 
 ## 部署说明
 
 - 容器读取 `CONFIG_FILE`，默认为 `config.yaml`。
 - 基于文件的缓存需要可写目录。
-- 内置代理服务器和 Telegram Bot 在同一进程中运行。
 
 # 项目来源与改动说明
 本项目基于 [eh2telegraph](https://github.com/qini7-sese/eh2telegraph) 进行重新实现，采用 Go 语言构建。在原有功能基础上，对代理配置与存储机制进行了调整。

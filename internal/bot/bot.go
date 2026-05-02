@@ -11,6 +11,7 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"DojinGo/internal/config"
+	"DojinGo/internal/httpclient"
 	syncsvc "DojinGo/internal/sync"
 	"DojinGo/internal/version"
 )
@@ -34,7 +35,11 @@ func New(cfg *config.Config, syncer *syncsvc.Synchronizer, logger *log.Logger) (
 	if logger == nil {
 		logger = log.Default()
 	}
-	botAPI, err := tgbotapi.NewBotAPI(cfg.Bot.Token)
+	tgClient, err := httpclient.New(cfg, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create telegram http client: %w", err)
+	}
+	botAPI, err := tgbotapi.NewBotAPIWithClient(cfg.Bot.Token, tgbotapi.APIEndpoint, tgClient.HTTPClient())
 	if err != nil {
 		return nil, fmt.Errorf("create telegram bot: %w", err)
 	}
@@ -55,7 +60,7 @@ func New(cfg *config.Config, syncer *syncsvc.Synchronizer, logger *log.Logger) (
 }
 
 func (s *Service) Start(ctx context.Context) error {
-	s.logger.Print("bot start")
+	s.logger.Printf("bot running with username @%s", s.bot.Self.UserName)
 	updateConfig := tgbotapi.NewUpdate(0)
 	updateConfig.Timeout = 30
 

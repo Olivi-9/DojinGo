@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"DojinGo/internal/config"
+	"golang.org/x/net/proxy"
 )
 
 const DefaultTimeout = 30 * time.Second
@@ -55,6 +56,9 @@ func NewWithOptions(cfg *config.Config, defaultHeaders http.Header, options Opti
 			return nil, err
 		}
 		transport.DialContext = dialContextWithPrefix(prefix)
+	}
+	if err := applyUpstreamProxy(transport, cfg.Proxy.Upstream); err != nil {
+		return nil, err
 	}
 
 	return &Client{
@@ -165,6 +169,61 @@ func cloneHeader(header http.Header) http.Header {
 
 func randomUserAgent() string {
 	return userAgents[mrand.Intn(len(userAgents))]
+}
+
+func applyUpstreamProxy(transport *http.Transport, upstream config.ProxyUpstreamConfig) error {
+	upstreamHTTP, err := config.NormalizeProxyEndpoint(upstream.HTTP, "http")
+	if err != nil {
+		return fmt.Errorf("proxy.upstream.http %w", err)
+	}
+	upstreamSOCKS5, err := config.NormalizeProxyEndpoint(upstream.SOCKS5, "socks5")
+	if err != nil {
+		return fmt.Errorf("proxy.upstream.socks5 %w", err)
+	}
+	if upstreamHTTP != nil && upstreamSOCKS5 != nil {
+		return fmt.Errorf("proxy.upstream can only set one of http or socks5")
+	}
+
+	if upstreamSOCKS5 != nil {
+		dialContext := transport.DialContext
+		if dialContext == nil {
+			dialContext = (&net.Dialer{Timeout: DefaultTimeout, KeepAlive: 30 * time.Second}).DialContext
+		}
+		baseDialer := contextDialer{dialContext: dialContext}
+		dialer, err := proxy.FromURL(upstreamSOCKS5, baseDialer)
+		if err != nil {
+			return fmt.Errorf("create socks5 proxy dialer: %w", err)
+		}
+		transport.Proxy = nil
+		transport.DialContext = proxyDialContext(dialer)
+		return nil
+	}
+
+	if upstreamHTTP != nil {
+		transport.Proxy = http.ProxyURL(upstreamHTTP)
+	}
+	return nil
+}
+
+func proxyDialContext(dialer proxy.Dialer) func(context.Context, string, string) (net.Conn, error) {
+	return func(ctx context.Context, network, address string) (net.Conn, error) {
+		if ctxDialer, ok := dialer.(proxy.ContextDialer); ok {
+			return ctxDialer.DialContext(ctx, network, address)
+		}
+		return dialer.Dial(network, address)
+	}
+}
+
+type contextDialer struct {
+	dialContext func(context.Context, string, string) (net.Conn, error)
+}
+
+func (d contextDialer) Dial(network, address string) (net.Conn, error) {
+	return d.dialContext(context.Background(), network, address)
+}
+
+func (d contextDialer) DialContext(ctx context.Context, network, address string) (net.Conn, error) {
+	return d.dialContext(ctx, network, address)
 }
 
 func parseIPv6Prefix(raw string) (*net.IPNet, error) {

@@ -4,11 +4,10 @@
 
 Bot that downloads EH/EX/NH galleries locally and republishes them to Telegraph.
 
-## What Changed
+## Features
 
-- The bot now talks to supported sites directly with Go's `net/http`.
+- Supports direct connections and outbound proxy for all traffic.
 - Cache is local only: in-memory or filesystem-backed.
-- Optional inbound proxy servers are built into the bot process.
 
 ## Supported Sources
 
@@ -41,10 +40,16 @@ Messages or captions that contain a supported gallery URL are also synchronized 
 docker compose up -d --build
 ```
 
-Or run locally:
+Or build locally:
 
 ```bash
-go run ./cmd/ehbot -config ./config.yaml
+go build -o build/ehbot ./cmd/ehbot
+```
+
+Run:
+
+```bash
+./build/ehbot -c config.yaml
 ```
 
 ## Configuration
@@ -71,14 +76,9 @@ storage:
   max_entries: 1024
 
 proxy:
-  listen:
-    http: "127.0.0.1:8080"
-    socks5: "127.0.0.1:1080"
-  auth:
-    enabled: false
-    username: ""
-    password: ""
-  rate_limit_per_minute: 120
+  upstream:
+    http: ""
+    socks5: ""
 
 collectors:
   exhentai:
@@ -98,7 +98,8 @@ Notes:
 - `storage.type` supports `memory` and `file`.
 - `storage.path` is only used by file storage.
 - `ipv6.prefix` can be a larger IPv6 CIDR such as `2001:db8::/64` for rotating local source addresses.
-- If `proxy.listen.http` and `proxy.listen.socks5` are empty, the built-in proxy servers stay disabled.
+- `proxy.upstream` configures outbound requests and supports `http(s)://` or `socks5://` (scheme optional for `host:port`).
+- When `proxy.upstream` is set, all outbound traffic (Telegram API, collectors, uploads) uses it.
 
 ## IPv6 Rotation
 
@@ -120,14 +121,13 @@ Useful commands:
 
 ```bash
 go test ./...
-go build ./cmd/ehbot
+go build -o build/ehbot ./cmd/ehbot
 ```
 
 ## Deployment Notes
 
 - The container reads `CONFIG_FILE`, defaulting to `config.yaml`.
 - File-backed cache needs a writable directory.
-- The built-in proxy server and Telegram bot run in the same process.
 
 # Project Origin and Changes
 This project is a reimplementation of [eh2telegraph](https://github.com/qini7-sese/eh2telegraph) using Go. It adjusts the proxy configuration and storage mechanisms while retaining the core functionality.

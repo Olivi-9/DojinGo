@@ -2,7 +2,6 @@ package collector
 
 import (
 	"context"
-	"log"
 	"sync"
 )
 
@@ -20,7 +19,6 @@ func loadImages(
 	if report != nil {
 		report(0, len(links), "downloading")
 	}
-	log.Printf("collector download start total=%d", len(links))
 	type job struct {
 		index int
 		link  string
@@ -80,6 +78,5 @@ func loadImages(
 		}
 	}
 	workers.Wait()
-	log.Printf("collector download done total=%d", len(links))
 	return images, nil
 }
