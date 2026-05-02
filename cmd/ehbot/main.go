@@ -20,6 +20,7 @@ import (
 func main() {
 	var configPath string
 	flag.StringVar(&configPath, "config", "", "config file path")
+	flag.StringVar(&configPath, "c", "", "config file path (shorthand)")
 	flag.Parse()
 
 	logger := log.New(os.Stdout, "", log.LstdFlags|log.Lmsgprefix)

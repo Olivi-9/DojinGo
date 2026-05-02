@@ -2,3 +2,4 @@
 config.yaml
 AGENT.md
 build/
+.DS_Store
