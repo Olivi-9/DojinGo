@@ -54,15 +54,12 @@ jobs:
           [ "$GOOS" = "windows" ] && EXT=".exe"
           OUT="build/Dojingo-${{ matrix.goos }}-${{ matrix.goarch }}${EXT}"
           go build -o "$OUT" ./cmd/Dojingo
-          if [ "$GOOS" = "linux" ] && [ "$GOARCH" = "amd64" ]; then
-            cp "$OUT" "build/Dojingo${EXT}"
-          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: Dojingo-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: build/
+          path: build/*
 
   release:
     needs: build
