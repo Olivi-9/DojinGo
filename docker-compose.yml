@@ -1,8 +1,8 @@
 version: "3.9"
 services:
-  ehbot:
+  Dojingo:
     build: .
-    container_name: ehbot
+    container_name: Dojingo
     restart: always
     network_mode: "host"
     environment:

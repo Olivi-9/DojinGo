@@ -1,3 +1,3 @@
 package version
 
-const Version = "go-migration-dev"
+const Version = "Dojingo 0.1.0"

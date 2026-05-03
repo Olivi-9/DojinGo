@@ -43,13 +43,36 @@ docker compose up -d --build
 或本地构建：
 
 ```bash
-go build -o build/ehbot ./cmd/ehbot
+go build -o build/Dojingo ./cmd/Dojingo
 ```
 
 运行：
 
 ```bash
-./build/ehbot -c config.yaml
+./build/Dojingo -c config.yaml
+```
+
+## Systemd（systemctl）
+
+示例服务文件：[systemd/dojingo.service](systemd/dojingo.service)。
+
+将配置放到 `/etc/dojingo/config.yaml` 以匹配服务文件。请确保配置中的 `storage.path` 指向可写目录，例如 `/var/lib/dojingo/cache`。
+
+编辑服务后启用：
+
+将 [dojingo.service](systemd/dojingo.service) 文件复制到 `/etc/systemd/system/` 下，并编辑路径
+
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now dojingo
+sudo systemctl status dojingo
+```
+
+日志：
+
+```bash
+sudo journalctl -u dojingo -f
 ```
 
 ## 配置
@@ -122,7 +145,7 @@ whitelist:
 
 ```bash
 go test ./...
-go build -o build/ehbot ./cmd/ehbot
+go build -o build/Dojingo ./cmd/Dojingo
 ```
 
 ## 部署说明

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"golang.org/x/text/cases"
+    "golang.org/x/text/language"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
@@ -59,6 +61,8 @@ func New(cfg *config.Config, syncer *syncsvc.Synchronizer, logger *log.Logger) (
 	}, nil
 }
 
+var caseTitle = cases.Title(language.English)
+
 func (s *Service) Start(ctx context.Context) error {
 	s.logger.Printf("bot running with username @%s", s.bot.Self.UserName)
 	updateConfig := tgbotapi.NewUpdate(0)
@@ -104,12 +108,12 @@ func (s *Service) handleCommand(ctx context.Context, message *tgbotapi.Message) 
 
 	switch command {
 	case "start":
-		s.reply(message.Chat.ID, "eh2telegraph is ready.\nUse /sync <url> to mirror an EH/EX/NH gallery into Telegraph.")
+		s.reply(message.Chat.ID, "Dojingo is ready.\nUse /sync <url> to mirror an EH/EX/NH gallery into Telegraph.")
 	case "help":
 		s.reply(message.Chat.ID, strings.Join([]string{
 			"/start - bot introduction",
-			"/help - show command help",
-			"/sync <url> - synchronize a gallery",
+			"/help - show command list",
+			"/sync <url> - synchronize a gallery, you can also send link directly without command",
 			"/id - show your Telegram chat ID",
 			"/version - show bot version",
 			"/cancel - cancel your ongoing sync jobs",
@@ -188,10 +192,10 @@ func (s *Service) startSync(ctx context.Context, message *tgbotapi.Message, rawU
 		finalURL, err := s.syncer.Sync(jobCtx, rawURL, func(stage string, done, total int) {
 			label := stage
 			if total > 0 {
-				updateStatus(fmt.Sprintf("%s: %d/%d", strings.Title(label), done, total), false)
+				updateStatus(fmt.Sprintf("%s: %d/%d", caseTitle.String(label), done, total), false)
 				return
 			}
-			updateStatus(strings.Title(label), false)
+			updateStatus(caseTitle.String(label), false)
 		})
 
 		deleteConfig := tgbotapi.NewDeleteMessage(message.Chat.ID, statusMessage.MessageID)

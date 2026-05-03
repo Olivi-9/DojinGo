@@ -43,13 +43,35 @@ docker compose up -d --build
 Or build locally:
 
 ```bash
-go build -o build/ehbot ./cmd/ehbot
+go build -o build/Dojingo ./cmd/Dojingo
 ```
 
 Run:
 
 ```bash
-./build/ehbot -c config.yaml
+./build/Dojingo -c config.yaml
+```
+
+## Systemd (systemctl)
+
+Example unit file: [systemd/dojingo.service](systemd/dojingo.service)
+
+Place your config at /etc/dojingo/config.yaml to match the unit file. Ensure `storage.path` in the config points to a writable directory, for example `/var/lib/dojingo/cache`.
+
+Edit service and enable it:
+
+copy [dojingo.service](systemd/dojingo.service) to `/etc/systemd/system/` and edit paths
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now dojingo
+sudo systemctl status dojingo
+```
+
+Logs:
+
+```bash
+sudo journalctl -u dojingo -f
 ```
 
 ## Configuration
@@ -121,7 +143,7 @@ Useful commands:
 
 ```bash
 go test ./...
-go build -o build/ehbot ./cmd/ehbot
+go build -o build/Dojingo ./cmd/Dojingo
 ```
 
 ## Deployment Notes

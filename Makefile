@@ -1,5 +1,5 @@
-APP     := ehbot
-CMD     := ./cmd/ehbot
+APP     := Dojingo
+CMD     := ./cmd/Dojingo
 OUTDIR  := build
 
 TARGETS := \

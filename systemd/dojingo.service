@@ -1,0 +1,19 @@
+[Unit]
+Description=DojinGo bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=dojingo
+Group=dojingo
+WorkingDirectory=/var/lib/dojingo
+Environment=HOME=/var/lib/dojingo
+Environment=XDG_CACHE_HOME=/var/lib/dojingo/.cache
+ExecStartPre=/usr/bin/mkdir -p /var/lib/dojingo/.cache
+ExecStart=/usr/local/bin/Dojingo -c /etc/dojingo/config.yaml
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
