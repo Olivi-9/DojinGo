@@ -71,7 +71,7 @@ type ExhentaiConfig struct {
 }
 
 type PixivConfig struct {
-	Session string `yaml:"session"`
+	Cookie string `yaml:"cookie"`
 }
 
 type WhitelistConfig struct {

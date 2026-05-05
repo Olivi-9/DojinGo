@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	URLFromTextRE = regexp.MustCompile(`((https://exhentai\.org/g/\w+/[\w-]+)|(https://e-hentai\.org/g/\w+/[\w-]+)|(https://nhentai\.(net|to)/g/\d+))`)
-	URLFromURLRE  = regexp.MustCompile(`^((https://exhentai\.org/g/\w+/[\w-]+)|(https://e-hentai\.org/g/\w+/[\w-]+)|(https://nhentai\.(net|to)/g/\d+))`)
+	URLFromTextRE = regexp.MustCompile(`((https://exhentai\.org/g/\w+/[\w-]+)|(https://e-hentai\.org/g/\w+/[\w-]+)|(https://nhentai\.(net|to)/g/\d+)|(https://www\.pixiv\.net/artworks/\d+))`)
+	URLFromURLRE  = regexp.MustCompile(`^((https://exhentai\.org/g/\w+/[\w-]+)|(https://e-hentai\.org/g/\w+/[\w-]+)|(https://nhentai\.(net|to)/g/\d+)|(https://www\.pixiv\.net/artworks/\d+))`)
 )
 
 type AlbumMeta struct {
@@ -66,6 +66,16 @@ func NewRegistry(cfg *config.Config) (*Registry, error) {
 		return nil, err
 	}
 
+	pixivHeaders := http.Header{}
+	pixivHeaders.Set("Referer", "https://www.pixiv.net/")
+	if cookie := strings.TrimSpace(cfg.Collectors.Pixiv.Cookie); cookie != "" {
+		pixivHeaders.Set("Cookie", fmt.Sprintf("%s", cookie))
+	}
+	pixivClient, err := httpclient.New(cfg, pixivHeaders)
+	if err != nil {
+		return nil, err
+	}
+
 	exHeaders := http.Header{}
 	if cfg.Collectors.Exhentai.IPBPassHash != "" &&
 		cfg.Collectors.Exhentai.IPBMemberID != "" &&
@@ -94,6 +104,7 @@ func NewRegistry(cfg *config.Config) (*Registry, error) {
 			NewEHCollector(ehClient, rawClient),
 			NewNHCollector(nhClient),
 			NewEXCollector(exClient, exRawClient),
+			NewPixivCollector(pixivClient),
 		},
 	}, nil
 }

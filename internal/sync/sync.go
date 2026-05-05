@@ -52,7 +52,6 @@ func (s *Synchronizer) DeleteCache(ctx context.Context, key string) error {
 	return s.store.Delete(ctx, key)
 }
 
-// TODO: images stored on disk, not in memory.
 func (s *Synchronizer) Sync(ctx context.Context, rawURL string, progress ProgressFunc) (string, error) {
 	rawURL = strings.TrimRight(strings.TrimSpace(rawURL), "/")
 

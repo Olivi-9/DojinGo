@@ -30,7 +30,7 @@ collectors:
     ipb_member_id: ""
     igneous: ""
   pixiv:
-    session: ""
+    cookie: ""
 
 whitelist:
   enabled: false
