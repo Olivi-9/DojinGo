@@ -2,7 +2,7 @@
 
 中文 | [English](README.md)
 
-自动从 EH/EX/NH 下载图片集并上传到 Telegraph 的 Bot。
+自动从 e-hentai / exhentai / nhentai / pixiv 下载图片集并上传到 Telegraph 的 Bot。
 
 ## 功能特性
 
@@ -14,8 +14,7 @@
 - `e-hentai`
 - `exhentai`
 - `nhentai`
-
-`pixiv` 目前只保留配置入口，暂未实现采集器。
+- `pixiv`
 
 ## 命令
 

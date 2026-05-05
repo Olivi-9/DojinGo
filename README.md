@@ -2,7 +2,7 @@
 
 [中文](README-zh.md) | English
 
-Bot that downloads EH/EX/NH galleries locally and republishes them to Telegraph.
+Bot that downloads ehentai / exhentai / nhentai / pixiv galleries locally and republishes them to Telegraph.
 
 ## Features
 
@@ -14,8 +14,7 @@ Bot that downloads EH/EX/NH galleries locally and republishes them to Telegraph.
 - `e-hentai`
 - `exhentai`
 - `nhentai`
-
-`pixiv` remains reserved in the config surface, but there is no collector implementation yet in the current runtime.
+- `pixiv`
 
 ## Commands
 

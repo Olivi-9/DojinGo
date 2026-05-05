@@ -108,7 +108,7 @@ func (s *Service) handleCommand(ctx context.Context, message *tgbotapi.Message) 
 
 	switch command {
 	case "start":
-		s.reply(message.Chat.ID, "Dojingo is ready.\nUse /sync <url> to mirror an EH/EX/NH gallery into Telegraph.")
+		s.reply(message.Chat.ID, "Dojingo is ready.\nUse /sync <url> to mirror an E-Hentai / Exhentai / NHentai Pixiv gallery into Telegraph.")
 	case "help":
 		s.reply(message.Chat.ID, strings.Join([]string{
 			"/start - bot introduction",
