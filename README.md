@@ -32,8 +32,21 @@ Messages or captions that contain a supported gallery URL are also synchronized 
 
 1. Copy [config_example.yaml](config_example.yaml) to `config.yaml`.
 2. Fill in your Telegram bot token and at least one Telegraph token.
-3. If you need `exhentai`, add the required cookies under `collectors.exhentai`.
-4. Start with Docker:
+3. If you need `exhentai` or `pixiv`, add the required cookies under their respective sections in `collectors`.
+
+## Using the binary
+
+1. You can download the precompiled binary from the [releases](https://github.com/Olivi-9/DojinGo/releases) page.
+
+2. Run with your config.yaml:
+
+```bash
+./DojinGo -c config.yaml
+```
+
+when no `-c` argument is provided, it will default to reading `config.yaml` in the current directory.
+
+## Start with Docker:
 
 ```bash
 docker compose up -d --build
@@ -151,4 +164,5 @@ go build -o build/Dojingo ./cmd/Dojingo
 - File-backed cache needs a writable directory.
 
 # Project Origin and Changes
+
 This project is a reimplementation of [eh2telegraph](https://github.com/qini7-sese/eh2telegraph) using Go. It adjusts the proxy configuration and storage mechanisms while retaining the core functionality.

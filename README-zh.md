@@ -32,8 +32,21 @@
 
 1. 复制 [config_example.yaml](config_example.yaml) 为 `config.yaml`。
 2. 填写 Telegram Bot Token 和至少一个 Telegraph Token。
-3. 如需 `exhentai`，在 `collectors.exhentai` 下添加必需的 Cookie。
-4. 使用 Docker 启动：
+3. 如需 `exhentai` 或 `pixiv`，在各自的 `collectors` 部分下添加必需的 Cookie。
+
+## 使用二进制文件
+
+1. 可在 [releases](https://github.com/Olivi-9/DojinGo/releases) 页面下载预编译的二进制文件。
+
+2. 配置 config.yaml 后运行：
+
+```bash
+./DojinGo -c config.yaml
+```
+
+当没有携带 `-c` 参数时，默认会读取当前目录下的 `config.yaml`。
+
+## 使用 Docker 启动：
 
 ```bash
 docker compose up -d --build
@@ -60,7 +73,6 @@ go build -o build/Dojingo ./cmd/Dojingo
 编辑服务后启用：
 
 将 [dojingo.service](systemd/dojingo.service) 文件复制到 `/etc/systemd/system/` 下，并编辑路径
-
 
 ```bash
 sudo systemctl daemon-reload
@@ -123,7 +135,6 @@ whitelist:
 - `proxy.upstream` 用于出站请求，可配置 `http(s)://` 或 `socks5://`（`host:port` 可省略协议）。
 - 当配置了 `proxy.upstream` 时，所有出站流量（Telegram API、采集器、上传）都会走代理。
 
-
 ## IPv6 轮换
 
 如果你拥有可路由的 IPv6 前缀并想要按连接源地址轮换：
@@ -153,4 +164,5 @@ go build -o build/Dojingo ./cmd/Dojingo
 - 基于文件的缓存需要可写目录。
 
 # 项目来源与改动说明
+
 本项目基于 [eh2telegraph](https://github.com/qini7-sese/eh2telegraph) 进行重新实现，采用 Go 语言构建。在原有功能基础上，对代理配置与存储机制进行了调整。
