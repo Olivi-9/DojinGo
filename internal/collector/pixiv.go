@@ -33,6 +33,7 @@ func (c *PixivCollector) Match(rawURL string) bool {
 	return pixivURLRE.MatchString(strings.TrimSpace(rawURL))
 }
 
+// TODO: auto update cookie
 func (c *PixivCollector) Fetch(ctx context.Context, rawURL string) (*Result, error) {
 	pid, err := parsePixivID(rawURL)
 	if err != nil {
