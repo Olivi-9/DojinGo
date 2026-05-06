@@ -32,6 +32,7 @@ jobs:
           - { goos: linux, goarch: amd64 }
           - { goos: linux, goarch: arm64 }
           - { goos: linux, goarch: arm }
+          - { goos: linux, goarch: loong64 }
           - { goos: darwin, goarch: amd64 }
           - { goos: darwin, goarch: arm64 }
           - { goos: windows, goarch: amd64 }

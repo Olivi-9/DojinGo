@@ -6,10 +6,11 @@ TARGETS := \
 	linux/amd64 \
 	linux/arm64 \
 	linux/arm \
+	linux/loong64 \
 	darwin/amd64 \
 	darwin/arm64 \
 	windows/amd64 \
-	windows/arm64
+	windows/arm64 \
 
 build:
 	@mkdir -p $(OUTDIR)
