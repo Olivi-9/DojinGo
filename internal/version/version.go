@@ -1,3 +1,3 @@
 package version
 
-const Version = "Dojingo 0.1.2"
+const Version = "Dojingo 0.1.3"

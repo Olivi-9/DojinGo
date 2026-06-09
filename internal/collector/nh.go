@@ -10,14 +10,10 @@ import (
 	"DojinGo/internal/httpclient"
 )
 
-const nhAPI = "https://nhapi.cat42.uk/gallery/"
-
-var nhCDNList = []string{
-	"https://i1.nhentai.net/galleries",
-	"https://i2.nhentai.net/galleries",
-	"https://i3.nhentai.net/galleries",
-	"https://i4.nhentai.net/galleries",
-}
+const (
+	nhAPI    = "https://nhentai.net/api/v2/galleries/"
+	nhCDNAPI = "https://nhentai.net/api/v2/cdn"
+)
 
 type NHCollector struct {
 	client *httpclient.Client
@@ -57,9 +53,26 @@ func (c *NHCollector) Fetch(ctx context.Context, rawURL string) (*Result, error)
 		return nil, fmt.Errorf("decode nhentai album: %w", err)
 	}
 
-	imageURLs := make([]imageURL, 0, len(album.Images.Pages))
-	for idx, page := range album.Images.Pages {
-		imageURLs = append(imageURLs, newImageURL(album.MediaID, idx+1, page.T))
+	var cdnPayload []byte
+	if err := retry(ctx, 5, func() error {
+		var err error
+		cdnPayload, err = c.client.GetBytes(ctx, nhCDNAPI)
+		return err
+	}); err != nil {
+		return nil, err
+	}
+
+	var cdn nhCDN
+	if err := json.Unmarshal(cdnPayload, &cdn); err != nil {
+		return nil, fmt.Errorf("decode nhentai cdn: %w", err)
+	}
+	if len(cdn.ImageServers) == 0 {
+		return nil, fmt.Errorf("nhentai cdn returned no image servers")
+	}
+
+	imageURLs := make([]imageURL, 0, len(album.Pages))
+	for _, page := range album.Pages {
+		imageURLs = append(imageURLs, newImageURL(cdn.ImageServers, page.Path))
 	}
 
 	return &Result{
@@ -103,9 +116,19 @@ func (c *NHCollector) Fetch(ctx context.Context, rawURL string) (*Result, error)
 }
 
 type nhAlbum struct {
-	MediaID string   `json:"media_id"`
-	Title   nhTitle  `json:"title"`
-	Images  nhImages `json:"images"`
+	Title nhTitle  `json:"title"`
+	Pages []nhPage `json:"pages"`
+}
+
+type nhPage struct {
+	Number    int    `json:"number"`
+	Path      string `json:"path"`
+	Thumbnail string `json:"thumbnail"`
+}
+
+type nhCDN struct {
+	ImageServers []string `json:"image_servers"`
+	ThumbServers []string `json:"thumb_servers"`
 }
 
 type nhTitle struct {
@@ -127,53 +150,26 @@ func (t nhTitle) bestTitle(fallback string) string {
 	}
 }
 
-type nhImages struct {
-	Pages []nhImage `json:"pages"`
-}
-
-type nhImage struct {
-	T imageType `json:"t"`
-}
-
-type imageType string
-
-func (t imageType) extension() string {
-	switch t {
-	case "j":
-		return ".jpg"
-	case "p":
-		return ".png"
-	case "g":
-		return ".gif"
-	case "w":
-		return ".webp"
-	default:
-		return ".jpg"
-	}
-}
-
 type imageURL struct {
 	Raw     string
-	MediaID string
-	Page    int
-	Type    imageType
+	Path    string
+	Servers []string
 }
 
-func newImageURL(mediaID string, page int, typ imageType) imageURL {
+func newImageURL(servers []string, path string) imageURL {
 	return imageURL{
-		Raw:     randomCDNLink(mediaID, page, typ),
-		MediaID: mediaID,
-		Page:    page,
-		Type:    typ,
+		Raw:     joinCDN(servers[rand.Intn(len(servers))], path),
+		Path:    path,
+		Servers: servers,
 	}
 }
 
 func (i imageURL) fallback() string {
-	return randomCDNLink(i.MediaID, i.Page, i.Type)
+	return joinCDN(i.Servers[rand.Intn(len(i.Servers))], i.Path)
 }
 
-func randomCDNLink(mediaID string, page int, typ imageType) string {
-	return fmt.Sprintf("%s/%s/%d%s", nhCDNList[rand.Intn(len(nhCDNList))], mediaID, page, typ.extension())
+func joinCDN(server, path string) string {
+	return strings.TrimSuffix(server, "/") + "/" + strings.TrimPrefix(path, "/")
 }
 
 func findFallback(urls []imageURL, current string) string {
