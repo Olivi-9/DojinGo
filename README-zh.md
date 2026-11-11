@@ -31,7 +31,7 @@
 ## 快速开始
 
 1. 复制 [config_example.yaml](config_example.yaml) 为 `config.yaml`。
-2. 填写 Telegram Bot Token 和至少一个 Telegraph Token。
+2. 填写 Telegram Bot Token、至少一个 Telegraph Token，以及 `b2` 图床配置（公开的 Backblaze B2 桶、对该桶有写权限的应用密钥、图片的公开访问域名）。
 3. 如需 `exhentai` 或 `pixiv`，在各自的 `collectors` 部分下添加必需的 Cookie。
 
 ## 使用二进制文件
@@ -99,6 +99,14 @@ telegraph:
   tokens: ["YOUR_TELEGRAPH_TOKEN"]
   author_name: "Author"
   author_url: "https://example.com"
+
+b2:
+  endpoint: "https://s3.us-west-004.backblazeb2.com"
+  bucket: "YOUR_BUCKET"
+  key_id: "YOUR_B2_KEY_ID"
+  application_key: "YOUR_B2_APPLICATION_KEY"
+  public_url: "https://img.example.com/file/YOUR_BUCKET"
+  path_prefix: "dojingo"
 
 ipv6:
   prefix: ""

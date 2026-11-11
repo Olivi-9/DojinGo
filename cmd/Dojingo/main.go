@@ -12,6 +12,7 @@ import (
 	"DojinGo/internal/collector"
 	"DojinGo/internal/config"
 	"DojinGo/internal/httpclient"
+	"DojinGo/internal/imagehost"
 	"DojinGo/internal/storage"
 	syncsvc "DojinGo/internal/sync"
 	"DojinGo/internal/telegraph"
@@ -44,9 +45,20 @@ func main() {
 	if err != nil {
 		logger.Fatalf("initialize telegraph client: %v", err)
 	}
-	tgClient := telegraph.New(tgHTTPClient, cfg.Telegraph.Tokens, cfg.Telegraph.CatboxUserHash)
+	tgClient := telegraph.New(tgHTTPClient, cfg.Telegraph.Tokens)
+
+	b2HTTPClient, err := httpclient.New(cfg, nil)
+	if err != nil {
+		logger.Fatalf("initialize b2 http client: %v", err)
+	}
+	imageHost, err := imagehost.NewB2(b2HTTPClient, cfg.B2)
+	if err != nil {
+		logger.Fatalf("initialize b2 image host: %v", err)
+	}
+
 	syncer := syncsvc.New(
 		tgClient,
+		imageHost,
 		registry,
 		store,
 		cfg.Telegraph.AuthorName,

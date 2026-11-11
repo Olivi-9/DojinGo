@@ -20,6 +20,7 @@ const (
 type Config struct {
 	Bot        BotConfig        `yaml:"bot"`
 	Telegraph  TelegraphConfig  `yaml:"telegraph"`
+	B2         B2Config         `yaml:"b2"`
 	IPv6       IPv6Config       `yaml:"ipv6"`
 	Storage    StorageConfig    `yaml:"storage"`
 	Proxy      ProxyConfig      `yaml:"proxy"`
@@ -33,10 +34,21 @@ type BotConfig struct {
 }
 
 type TelegraphConfig struct {
-	Tokens         []string `yaml:"tokens"`
-	AuthorName     string   `yaml:"author_name"`
-	AuthorURL      string   `yaml:"author_url"`
-	CatboxUserHash string   `yaml:"catbox_user_hash"`
+	Tokens     []string `yaml:"tokens"`
+	AuthorName string   `yaml:"author_name"`
+	AuthorURL  string   `yaml:"author_url"`
+}
+
+// B2Config configures the Backblaze B2 bucket (S3-compatible API) that hosts
+// the images embedded in Telegraph pages.
+type B2Config struct {
+	Endpoint       string `yaml:"endpoint"`
+	Region         string `yaml:"region"`
+	Bucket         string `yaml:"bucket"`
+	KeyID          string `yaml:"key_id"`
+	ApplicationKey string `yaml:"application_key"`
+	PublicURL      string `yaml:"public_url"`
+	PathPrefix     string `yaml:"path_prefix"`
 }
 
 type IPv6Config struct {
@@ -159,6 +171,15 @@ func (c *Config) Normalize(configDir string, legacy LegacyConfig) {
 		c.Collectors.Exhentai = legacy.Exhentai
 	}
 
+	c.B2.Endpoint = strings.TrimRight(strings.TrimSpace(c.B2.Endpoint), "/")
+	if c.B2.Endpoint != "" && !strings.Contains(c.B2.Endpoint, "://") {
+		c.B2.Endpoint = "https://" + c.B2.Endpoint
+	}
+	if c.B2.Region == "" {
+		c.B2.Region = b2RegionFromEndpoint(c.B2.Endpoint)
+	}
+	c.B2.PublicURL = strings.TrimRight(strings.TrimSpace(c.B2.PublicURL), "/")
+
 	if c.Storage.Type == "" {
 		c.Storage.Type = "memory"
 	}
@@ -185,6 +206,22 @@ func (c *Config) Validate(legacy LegacyConfig) error {
 	}
 	if len(c.Telegraph.Tokens) == 0 {
 		errs = append(errs, errors.New("telegraph.tokens must contain at least one token"))
+	}
+
+	if c.B2.Endpoint == "" {
+		errs = append(errs, errors.New("b2.endpoint is required"))
+	}
+	if c.B2.Region == "" {
+		errs = append(errs, errors.New("b2.region is required (could not derive it from b2.endpoint)"))
+	}
+	if c.B2.Bucket == "" {
+		errs = append(errs, errors.New("b2.bucket is required"))
+	}
+	if c.B2.KeyID == "" || c.B2.ApplicationKey == "" {
+		errs = append(errs, errors.New("b2.key_id and b2.application_key are required"))
+	}
+	if c.B2.PublicURL == "" {
+		errs = append(errs, errors.New("b2.public_url is required"))
 	}
 
 	switch c.Storage.Type {
@@ -236,6 +273,20 @@ func NormalizeProxyEndpoint(raw, defaultScheme string) (*url.URL, error) {
 		return nil, fmt.Errorf("proxy endpoint %q is missing host", raw)
 	}
 	return parsed, nil
+}
+
+// b2RegionFromEndpoint extracts "us-west-004" from
+// "https://s3.us-west-004.backblazeb2.com".
+func b2RegionFromEndpoint(endpoint string) string {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return ""
+	}
+	labels := strings.Split(parsed.Hostname(), ".")
+	if len(labels) >= 3 && labels[0] == "s3" {
+		return labels[1]
+	}
+	return ""
 }
 
 func (c *Config) StorageTTL() time.Duration {

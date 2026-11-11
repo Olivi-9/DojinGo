@@ -8,7 +8,16 @@ telegraph:
     - "replace-with-telegraph-token"
   author_name: "Olivi"
   author_url: "https://github.com/Olivi-9/DojinGo"
-  catbox_user_hash: ""
+
+# Image host: Backblaze B2 bucket (S3-compatible API), served via a custom domain.
+b2:
+  endpoint: "https://s3.us-west-004.backblazeb2.com" # bucket's S3 endpoint
+  region: "" # optional, derived from endpoint
+  bucket: "genshin-bot-images"
+  key_id: "replace-with-b2-key-id"
+  application_key: "replace-with-b2-application-key"
+  public_url: "https://img.olivi.top/file/genshin-bot-images" # custom domain (CNAME to f004.backblazeb2.com) + /file/<bucket>
+  path_prefix: "dojingo" # optional object key prefix
 
 ipv6:
   prefix: ""

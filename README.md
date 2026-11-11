@@ -31,7 +31,7 @@ Messages or captions that contain a supported gallery URL are also synchronized 
 ## Quick Start
 
 1. Copy [config_example.yaml](config_example.yaml) to `config.yaml`.
-2. Fill in your Telegram bot token and at least one Telegraph token.
+2. Fill in your Telegram bot token, at least one Telegraph token, and the `b2` image-host settings (a public Backblaze B2 bucket, an application key with write access to it, and the public URL images are served from).
 3. If you need `exhentai` or `pixiv`, add the required cookies under their respective sections in `collectors`.
 
 ## Using the binary
@@ -99,6 +99,14 @@ telegraph:
   tokens: ["YOUR_TELEGRAPH_TOKEN"]
   author_name: "Author"
   author_url: "https://example.com"
+
+b2:
+  endpoint: "https://s3.us-west-004.backblazeb2.com"
+  bucket: "YOUR_BUCKET"
+  key_id: "YOUR_B2_KEY_ID"
+  application_key: "YOUR_B2_APPLICATION_KEY"
+  public_url: "https://img.example.com/file/YOUR_BUCKET"
+  path_prefix: "dojingo"
 
 ipv6:
   prefix: ""

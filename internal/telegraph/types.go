@@ -22,10 +22,6 @@ type Page struct {
 	Views       int    `json:"views"`
 }
 
-type MediaInfo struct {
-	Src string `json:"src"`
-}
-
 type Node struct {
 	Tag      string `json:"tag,omitempty"`
 	Attrs    *Attrs `json:"attrs,omitempty"`
